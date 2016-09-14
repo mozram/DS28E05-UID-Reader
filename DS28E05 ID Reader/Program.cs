@@ -12,18 +12,19 @@ namespace DS28E05_ID_Reader
     {
         static SerialPortStream openPort;
         static bool _continue;
-        static bool DeviceFound = false;
-        static string comPort = "";
+        //static bool DeviceFound = false;
 
         static void Main(string[] args)
         {
             Console.WriteLine("DS28E05 Unique ID reader\n");
-            Console.WriteLine("Getting list of available port...");
+            Console.WriteLine("Loading port configuration...\n");
 
+            /* getting list of available ports
             foreach (string port in GetAllPorts())
             {
                 Console.WriteLine(port);
             }
+            
 
             //For manual com port selection
             //Console.WriteLine("\rSelect port to open: ");
@@ -37,12 +38,13 @@ namespace DS28E05_ID_Reader
                 Console.WriteLine("Device not found!");
                 return;
             }
+            */
 
             StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
 
             try
             {
-                openPort = new SerialPortStream(com, 9600, 8, RJCP.IO.Ports.Parity.None, RJCP.IO.Ports.StopBits.One);
+                openPort = new SerialPortStream(LoadComPort(), 9600, 8, RJCP.IO.Ports.Parity.None, RJCP.IO.Ports.StopBits.One);
                 openPort.DataReceived += Serialport_DataReceived;
 
                 // Set the read/write timeouts
@@ -53,12 +55,12 @@ namespace DS28E05_ID_Reader
                     openPort.Open();
                 else
                 {
-                    Console.WriteLine("Port is already opened! Aborting...");
+                    Console.WriteLine("Port is already opened! Aborting...\n");
                     return;
                 }
                 _continue = true;
 
-                Console.WriteLine("Type QUIT to exit");
+                //Console.WriteLine("Type QUIT to exit");
                 string message = "";
 
                 while (_continue)
@@ -103,32 +105,6 @@ namespace DS28E05_ID_Reader
                 }
 
                 openPort.Close();
-                //openPort.DataReceived += new SerialDataReceivedEventHandler(Serialport_DataReceived);
-                
-
-                //if(openPort.IsOpen)
-                //{
-                //    string line;
-
-                //    do
-                //    {
-                //        line = Console.ReadLine();
-                //        byte[] bytes = line.Split(' ').Select(s => Convert.ToByte(s, 16)).ToArray();
-                //        openPort.Write(bytes, 0, bytes.Length);
-                //    } while (line != "quit");
-                //    openPort.Close();
-
-                //    string str = "E3 C9";
-                //    byte[] bytes = str.Split(' ').Select(s => Convert.ToByte(s, 16)).ToArray();
-                //    openPort.Write(bytes, 0, bytes.Length);
-                //    System.Threading.Thread.Sleep(250);
-                //    while (true)
-                //    {
-                //        Console.WriteLine(Received);
-                //        System.Threading.Thread.Sleep(100);
-                //    }
-                
-                //openPort.Close();
             }
             catch (Exception ex)
             {
@@ -137,6 +113,7 @@ namespace DS28E05_ID_Reader
             
         }
 
+        /*
         static List<string> GetAllPorts()
         {
             List<String> allPorts = new List<String>();
@@ -146,6 +123,7 @@ namespace DS28E05_ID_Reader
             }
             return allPorts;
         }
+        */
 
         static void Serialport_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
@@ -171,6 +149,12 @@ namespace DS28E05_ID_Reader
             }
         }
 
+        /*
+        /// <summary>
+        /// Search for DS28E05 device
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         static void Serialport_DataReceived_Search(object sender, SerialDataReceivedEventArgs e)
         {
 
@@ -189,7 +173,7 @@ namespace DS28E05_ID_Reader
 
                 if (response == "F5") DeviceFound = true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 ///project specific code here...
             }
@@ -230,15 +214,24 @@ namespace DS28E05_ID_Reader
             }
             return null;
         }
+        */
 
-        static void LoadIni()
+        static string LoadComPort()
         {
-            //get local path of configuration
-            string path = Directory.GetCurrentDirectory().Replace(@"\", @"\\") + "\\config.ini";
+            try
+            {
+                //get local path of configuration
+                string path = Directory.GetCurrentDirectory().Replace(@"\", @"\\") + "\\config.ini";
 
-            //load configuration
-            IniFile ini = new IniFile(path);
-            comPort = ini.IniReadValue("Setting", "Port");
+                //load configuration
+                IniFile ini = new IniFile(path);
+                return ini.IniReadValue("Setting", "Port");
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine("Error when loading configuration file. " + ex.Message + "\n");
+                return null;
+            }
         }
     }
 }
